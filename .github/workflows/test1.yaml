@@ -11,7 +11,7 @@ on:
 
 jobs:
   install-oracle-client:
-    runs-on: [self-hosted, linux, linux-64-medium]
+    runs-on: 'linux-64-medium'
 
     steps:
       - name: Checkout code

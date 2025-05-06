@@ -1,7 +1,7 @@
-name: Setup Oracle Instant Client
+name: Setup Oracle Instant Client via Docker
 
-on: 
-  push: 
+on:
+  push:
     branches:
       - main
   pull_request:
@@ -9,7 +9,7 @@ on:
       - main
   workflow_dispatch:
 
-jobs: 
+jobs:
   setup-oracle-instant-client:
     runs-on: ubuntu-latest
 
@@ -17,34 +17,13 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Oracle Instant Client
+      - name: Run Oracle Instant Client in Docker
         run: |
-          echo "Setting up the Oracle Instant Client..."
-          mkdir -p $HOME/oracle
-          cd $HOME/oracle
+          echo "Running Oracle Instant Client in Docker container..."
 
-          echo "Downloading Oracle Instant Client support files..."
-          wget https://github.com/oracle/odpi/archive/refs/heads/main.zip
-          unzip main.zip
-          cd odpi-main
-          mkdir -p instantclient && cd instantclient
-
-          echo "Downloading Oracle Instant Client binaries..."
-          wget https://download.oracle.com/otn_software/linux/instantclient/19800/oracle-instantclient19.8-basic-1.0.zip
-          wget https://download.oracle.com/otn_software/linux/instantclient/19800/oracle-instantclient19.8-sqlplus-1.0.zip
-
-          echo "Unzipping Oracle Instant Client packages..."
-          unzip oracle-instantclient19.8-basic-1.0.zip
-          unzip oracle-instantclient19.8-sqlplus-1.0.zip
-
-          echo "Cleaning up..."
-          rm $HOME/oracle/main.zip
-
-          echo "Setting environment variables..."
-          echo "LD_LIBRARY_PATH=$HOME/oracle/odpi-main/instantclient" >> $GITHUB_ENV
-          echo "PATH=$HOME/oracle/odpi-main/instantclient:$PATH" >> $GITHUB_ENV
-
-      - name: Verify Installation
-        run: |
-          echo "Verifying Oracle Instant Client installation..."
-          sqlplus -v || echo "SQL*Plus not found in PATH"
+          docker run --rm -i oraclelinux:7-slim bash -c "
+            yum -y install oracle-release-el7 &&
+            yum-config-manager --enable ol7_oracle_instantclient &&
+            yum -y install oracle-instantclient19.8-basic oracle-instantclient19.8-sqlplus &&
+            sqlplus -v
+          "

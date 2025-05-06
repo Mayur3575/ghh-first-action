@@ -1,0 +1,51 @@
+name: Setup Oracle Instant Client
+
+on: 
+  push: 
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs: 
+  setup-oracle-instant-client:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Oracle Instant Client
+        run: |
+          echo "Setting up the Oracle Instant Client..."
+          mkdir -p $HOME/oracle
+          cd $HOME/oracle
+
+          echo "Downloading Oracle Instant Client..."
+          wget https://github.com/oracle/odpi/archive/refs/heads/master.zip
+          unzip master.zip
+          cd odpi-master
+          mkdir -p instantclient && cd instantclient
+
+          # Download Instant Client Basic and SQL*Plus
+          wget https://download.oracle.com/otn_software/linux/instantclient/19800/oracle-instantclient19.8-basic-1.0.zip
+          wget https://download.oracle.com/otn_software/linux/instantclient/19800/oracle-instantclient19.8-sqlplus-1.0.zip
+
+          # Unzip the downloaded files
+          unzip oracle-instantclient19.8-basic-1.0.zip
+          unzip oracle-instantclient19.8-sqlplus-1.0.zip
+
+          # Clean up
+          rm $HOME/oracle/master.zip
+
+          # Set up the environment variables
+          echo "export LD_LIBRARY_PATH=$HOME/oracle/odpi-master/instantclient" >> $GITHUB_ENV
+          echo "export PATH=$HOME/oracle/odpi-master/instantclient:$PATH" >> $GITHUB_ENV
+
+      - name: Verify Installation
+        run: |
+          echo "Verifying Oracle Instant Client installation..."
+          source $GITHUB_ENV
+          sqlplus -v || echo "SQL*Plus not found in PATH"

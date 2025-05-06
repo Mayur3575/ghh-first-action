@@ -1,0 +1,48 @@
+name: Testing
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  install-oracle-client:
+    runs-on: [self-hosted, linux, linux-64-medium]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libaio1 unzip wget
+
+      - name: Download and install Oracle Instant Client
+        run: |
+          mkdir -p $HOME/oracle
+          cd $HOME/oracle
+
+          echo "Downloading Oracle Instant Client..."
+          wget https://download.oracle.com/otn_software/linux/instantclient/19800/oracle-instantclient-basiclite-19.8.0.0.0-1.x86_64.zip
+          wget https://download.oracle.com/otn_software/linux/instantclient/19800/oracle-instantclient-sqlplus-19.8.0.0.0-1.x86_64.zip
+
+          unzip oracle-instantclient-basiclite-19.8.0.0.0-1.x86_64.zip
+          unzip oracle-instantclient-sqlplus-19.8.0.0.0-1.x86_64.zip
+
+          export ORACLE_HOME=$HOME/oracle/instantclient_19_8
+          export PATH=$ORACLE_HOME:$PATH
+          export LD_LIBRARY_PATH=$ORACLE_HOME:$LD_LIBRARY_PATH
+
+          echo "ORACLE_HOME=$ORACLE_HOME" >> $GITHUB_ENV
+          echo "PATH=$ORACLE_HOME:$PATH" >> $GITHUB_ENV
+          echo "LD_LIBRARY_PATH=$ORACLE_HOME:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+
+      - name: Run your script
+        run: |
+          chmod +x scripts/setup-db.sh
+          ./scripts/setup-db.sh

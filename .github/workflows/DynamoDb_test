@@ -5,15 +5,15 @@ on:
   workflow_dispatch:
     inputs:
       table_name:
-        description: 'DynamoDB Table Name'
+        description: 'Omkar123'
         required: true
         type: string
       partition_key_name:
-        description: 'Partition Key Name'
+        description: 'Niranjan'
         required: true
         type: string
       partition_key_value:
-        description: 'Partition Key Value'
+        description: 'Niranjan'
         required: true
         type: string
 
@@ -22,7 +22,7 @@ permissions:
   contents: read
 
 env:
-  AWS_REGION: us-east-1
+  AWS_REGION: ap-south-1
 
 jobs:
   delete-dynamodb-entry:

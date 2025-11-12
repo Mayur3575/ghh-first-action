@@ -26,7 +26,7 @@ env:
 
 jobs:
   delete-dynamodb-entry:
-    runs-on: linux-x64-medium
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository

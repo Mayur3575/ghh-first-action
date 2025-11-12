@@ -1,0 +1,60 @@
+# ...existing code...
+name: Delete DynamoDB entry
+
+on:
+  workflow_dispatch:
+    inputs:
+      table_name:
+        description: 'DynamoDB Table Name'
+        required: true
+        type: string
+      partition_key_name:
+        description: 'Partition Key Name'
+        required: true
+        type: string
+      partition_key_value:
+        description: 'Partition Key Value'
+        required: true
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: us-east-1
+
+jobs:
+  delete-dynamodb-entry:
+    runs-on: linux-x64-medium
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials using OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-session-name: GitHubActions-DynamoDB-Delete
+
+      - name: Verify AWS identity
+        run: |
+          aws sts get-caller-identity
+
+      - name: Delete DynamoDB entry
+        run: |
+          KEY_JSON="{\"${{ inputs.partition_key_name }}\":{\"S\":\"${{ inputs.partition_key_value }}\"}}"
+          echo "Deleting item with key: $KEY_JSON"
+          aws dynamodb delete-item \
+            --table-name "${{ inputs.table_name }}" \
+            --key "$KEY_JSON" \
+            --return-values ALL_OLD \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Confirm deletion
+        run: |
+          echo "DynamoDB entry deletion completed successfully"
+          echo "Table: ${{ inputs.table_name }}"
+          echo "Partition Key: ${{ inputs.partition_key_name }} = ${{ inputs.partition_key_value }}"

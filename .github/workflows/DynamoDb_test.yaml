@@ -1,19 +1,22 @@
-# ...existing code...
-name: Delete DynamoDB entry
+name: Delete DynamoDB Attribute
 
 on:
   workflow_dispatch:
     inputs:
       table_name:
-        description: 'omkar123'
+        description: 'DynamoDB Table Name'
         required: true
         type: string
       partition_key_name:
-        description: 'Niranjan'
+        description: 'Partition Key Name'
         required: true
         type: string
       partition_key_value:
-        description: 'Dynamics'
+        description: 'Partition Key Value'
+        required: true
+        type: string
+      attribute_name:
+        description: 'Attribute (column) to remove'
         required: true
         type: string
 
@@ -25,7 +28,7 @@ env:
   AWS_REGION: ap-south-1
 
 jobs:
-  delete-dynamodb-entry:
+  remove-dynamodb-attribute:
     runs-on: ubuntu-latest
 
     steps:
@@ -37,24 +40,26 @@ jobs:
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: GitHubActions-DynamoDB-Delete
+          role-session-name: GitHubActions-DynamoDB-RemoveAttr
 
       - name: Verify AWS identity
         run: |
           aws sts get-caller-identity
 
-      - name: Delete DynamoDB entry
+      - name: Remove attribute from DynamoDB entry
         run: |
           KEY_JSON="{\"${{ inputs.partition_key_name }}\":{\"S\":\"${{ inputs.partition_key_value }}\"}}"
-          echo "Deleting item with key: $KEY_JSON"
-          aws dynamodb delete-item \
+          echo "Removing attribute '${{ inputs.attribute_name }}' from item with key: $KEY_JSON"
+          aws dynamodb update-item \
             --table-name "${{ inputs.table_name }}" \
             --key "$KEY_JSON" \
-            --return-values ALL_OLD \
+            --update-expression "REMOVE #attr" \
+            --expression-attribute-names "{\"#attr\": \"${{ inputs.attribute_name }}\"}" \
+            --return-values ALL_NEW \
             --region ${{ env.AWS_REGION }}
 
-      - name: Confirm deletion
+      - name: Confirm removal
         run: |
-          echo "DynamoDB entry deletion completed successfully"
+          echo "Attribute '${{ inputs.attribute_name }}' removed from DynamoDB item"
           echo "Table: ${{ inputs.table_name }}"
           echo "Partition Key: ${{ inputs.partition_key_name }} = ${{ inputs.partition_key_value }}"

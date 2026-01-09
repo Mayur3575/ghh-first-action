@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Print greeting
-        run: echo "Hello World!"
+        run: echo "Hello Wold!"
         shell: bash
         
       - name: Print goodbye
